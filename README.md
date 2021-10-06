@@ -1,5 +1,5 @@
 # SSD1306_I2C_TM4C123GH6PM
-In this program, a driver is written for the SSD1306 display with I2C protocol.
+In this program, a driver is written for the SSD1306 128x64 OLED display with I2C protocol.
 Also in the program was written a code for using the I2C module in the TM4C123HG6PM microcontroller.
 Currently, the driver can print text and draw pixels to the SSD1306 displays.
 Full datasheet for SSD1306 display can be found [here](https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf "here")
