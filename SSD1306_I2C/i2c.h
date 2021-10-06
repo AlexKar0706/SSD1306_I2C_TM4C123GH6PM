@@ -15,7 +15,7 @@ TransmissionStatus I2C_Transmit_Byte(unsigned const char byte);
 TransmissionStatus I2C_Stop_Transmission(void);
 
 TransmissionStatus I2C_Send_Byte(unsigned const char byte, 
-								 unsigned const char address);
+				 unsigned const char address);
 
 TransmissionStatus I2C_Send_Bytes(unsigned const char* buffer,
                                   unsigned long        n_Bytes,
