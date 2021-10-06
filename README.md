@@ -85,3 +85,12 @@ To display all buffer data on the display, use *SSD1306_Draw* function. To clear
 ### Display text manipulations
 To position the cursor at a certain position on the screen, you need to use *SSD1306_SetCursor* function. This function has its own coordinates, which are different from the real coordinates of the screen!
 To display text on the display, you need to use *SSD1306_Write_Str* function. This function also immediately displays the text on the display by calling *SSD1306_Draw* function
+
+### SSD1306Status Enum
+This enum represents a possible set of statuses for functions associated with the SSD1306 display. 
+At the moment, this enum has three possible statuses:
+
+1. SSD1306_OK = 0
+2. SSD1306_I2C_ERR = 1
+3. SSD1306_WRONG_DATA = 2
+
