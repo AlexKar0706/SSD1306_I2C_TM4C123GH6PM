@@ -46,14 +46,14 @@ void I2C_Init(unsigned short status) {volatile unsigned long delay;
 	
 	/* Port D Initialisation */
 	GPIO_PORTD_AFSEL_R |=  ( GPIO_PORTD_PD0 |
-							 GPIO_PORTD_PD1 );
+				 GPIO_PORTD_PD1 );
 	GPIO_PORTD_AMSEL_R &= ~( GPIO_PORTD_PD0 |
-							 GPIO_PORTD_PD1 );
+				 GPIO_PORTD_PD1 );
 	GPIO_PORTD_DEN_R   |=  ( GPIO_PORTD_PD0 |
-							 GPIO_PORTD_PD1 );
+				 GPIO_PORTD_PD1 );
 	GPIO_PORTD_ODR_R   |=    GPIO_PORTD_PD1;
 	GPIO_PORTD_PCTL_R  |=  ( GPIO_PCTL_PD1_I2C3SDA |
-							 GPIO_PCTL_PD0_I2C3SCL );
+				 GPIO_PCTL_PD0_I2C3SCL );
 	
 	/* I2C Initialisation */
 	I2C3_MCR_R   |= 0x10;
@@ -111,7 +111,7 @@ TransmissionStatus I2C_Start_Transmission(unsigned const char byte,
 	
 	//Start -> Send -> Continue I2C transmission
 	I2C3_MCS_R = ( I2C_MCS_RUN   |
-				   I2C_MCS_START );
+		       I2C_MCS_START );
 	
 	//Wait till microcontroller goes in idle mode
 	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
@@ -205,7 +205,7 @@ TransmissionStatus I2C_Stop_Transmission() {
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
 TransmissionStatus I2C_Send_Byte(unsigned const char byte,
-								 unsigned const char address)  
+				 unsigned const char address)  
 {
 	if (mLow_transmission) return I2CERROR; //Check if low level transsmision is already active
 	
@@ -218,8 +218,8 @@ TransmissionStatus I2C_Send_Byte(unsigned const char byte,
 		
 	//Start -> Send -> Stop I2C transmission
 	I2C3_MCS_R = ( I2C_MCS_RUN   |
-				   I2C_MCS_START |
-				   I2C_MCS_STOP  );
+		       I2C_MCS_START |
+		       I2C_MCS_STOP  );
 		 
 	//Wait till microcontroller goes in idle mode
 	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
@@ -244,7 +244,7 @@ TransmissionStatus I2C_Send_Byte(unsigned const char byte,
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
 TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
                                   unsigned long        n_Bytes,
-								  unsigned const char  address)	
+				  unsigned const char  address)	
 {
 	if (mLow_transmission) return I2CERROR; //Check if low level transsmision is already active
 	
@@ -259,7 +259,7 @@ TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
 	
 	//Start -> Send -> Continue I2C transmission
 	I2C3_MCS_R =  ( I2C_MCS_RUN   |
-					I2C_MCS_START );
+			I2C_MCS_START );
 
 	while (n_Bytes--) {
 		//Wait till microcontroller goes in idle mode
@@ -305,16 +305,16 @@ TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
 TransmissionStatus I2C_Recive_Byte(unsigned char*      buffer,
-								   unsigned const char address)  
+				   unsigned const char address)  
 {
 	I2C3_MSA_R  = address;
 	
 	while (I2C3_MCS_R&I2C_MCS_BUSBSY) {};
 		
 	I2C3_MCS_R  =  ( I2C_MCS_RUN   |
-					 I2C_MCS_START |
-					 I2C_MCS_STOP  |
-					 I2C_MCS_ACK   );
+			 I2C_MCS_START |
+			 I2C_MCS_STOP  |
+			 I2C_MCS_ACK   );
 	
 	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
 	
@@ -338,15 +338,15 @@ TransmissionStatus I2C_Recive_Byte(unsigned char*      buffer,
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
 TransmissionStatus I2C_Recive_Bytes(unsigned char*       buffer,
-									unsigned const char  address)	
+				    unsigned const char  address)	
 {	
 	I2C3_MSA_R  = address;
 		
 	while (I2C3_MCS_R&I2C_MCS_BUSBSY) {};
 	
 	I2C3_MCS_R =   ( I2C_MCS_RUN   |
-		             I2C_MCS_ACK   |
-					 I2C_MCS_START );
+		         I2C_MCS_ACK   |
+			 I2C_MCS_START );
 
 	while (*(++buffer)) {
 		while (I2C3_MCS_R&I2C_MCS_BUSY) {};
@@ -361,7 +361,7 @@ TransmissionStatus I2C_Recive_Bytes(unsigned char*       buffer,
 		if (!(*(buffer+1))) break;
 		
 		I2C3_MCS_R  =  ( I2C_MCS_RUN   |
-										 I2C_MCS_ACK   );
+				 I2C_MCS_ACK   );
 	}
 	
 	I2C3_MCS_R =  ( I2C_MCS_RUN  |

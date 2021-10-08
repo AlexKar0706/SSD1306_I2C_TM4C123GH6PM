@@ -190,7 +190,7 @@ static void _Delay1ms(unsigned long ms) {
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
 SSD1306Status SSD1306_Send_Commands(unsigned const char* bytes, 
-									unsigned long        n_Bytes)
+				    unsigned long        n_Bytes)
 {unsigned long i;
 	
 	_Clear_Command_Buffer();
@@ -222,22 +222,22 @@ SSD1306Status SSD1306_Init(unsigned short PLLoption) {
 	
 	//Initialisation of basic commands for the SSD1306 display
 	unsigned char n_Commands[]    =  { SSD1306_DISPLAY_OFF,                        //Put display to the sleep mode for initialisation
-                                       SSD1306_DISPLAY_CLOCK,  0x80,               //Set Fosc to 370kHz
-                                       SSD1306_DISPLAY_OFFSET, 0x00,               //Set display offset to be equal to 0
-									   SSD1306_MUX_RATIO,      0x3F,               //MUX ration to 1
-									   SSD1306_SEG_REMAP_127,                      //Write data from left to right
-									   SSD1306_COM_REMAP_REVERSE,                  //Write data from up to down
-									   SSD1306_SET_COM_PINS,    (0x01 << 4) | 0x02,//Disable advanced COM remap
-									   SSD1306_CONTRAST,        0x81,              //Set display contrast to 0x81 value
-									   SSD1306_DISPLAY_START_LINE};                //Set start line to the display start
+                                           SSD1306_DISPLAY_CLOCK,  0x80,               //Set Fosc to 370kHz
+                                           SSD1306_DISPLAY_OFFSET, 0x00,               //Set display offset to be equal to 0
+					   SSD1306_MUX_RATIO,      0x3F,               //MUX ration to 1
+					   SSD1306_SEG_REMAP_127,                      //Write data from left to right
+					   SSD1306_COM_REMAP_REVERSE,                  //Write data from up to down
+					   SSD1306_SET_COM_PINS,    (0x01 << 4) | 0x02,//Disable advanced COM remap
+					   SSD1306_CONTRAST,        0x81,              //Set display contrast to 0x81 value
+					   SSD1306_DISPLAY_START_LINE};                //Set start line to the display start
 	unsigned char n_Commands2[]   =  { SSD1306_ADDR_MODE,       0x00,              //Set addressing mode to Horizontal mode
-									   SSD1306_INVERSE_DISPLAY_OFF,                //Disable inversed display function
-									   SSD1306_PRECHARGE,       0xF1,              //Set precharge period value to be equal to 0xF1
-									   SSD1306_VCOMH_LVL,       0x30,              //Set Vcomh level to be equal to 0x30
-									   SSD1306_CHARGE_PUMP_REGULATOR, 0x14,        //Enable charge pump regulation
-									   SSD1306_ENTIRE_DISPLAY_OFF,                 //Disable entiry display function
-									   SSD1306_SCROLL_STOP,                        //Disable scrolling function
-									   SSD1306_DISPLAY_ON };                       //Activate display
+					   SSD1306_INVERSE_DISPLAY_OFF,                //Disable inversed display function
+					   SSD1306_PRECHARGE,       0xF1,              //Set precharge period value to be equal to 0xF1
+					   SSD1306_VCOMH_LVL,       0x30,              //Set Vcomh level to be equal to 0x30
+					   SSD1306_CHARGE_PUMP_REGULATOR, 0x14,        //Enable charge pump regulation
+					   SSD1306_ENTIRE_DISPLAY_OFF,                 //Disable entiry display function
+					   SSD1306_SCROLL_STOP,                        //Disable scrolling function
+					   SSD1306_DISPLAY_ON };                       //Activate display
 	
 	_Clear_Data_Buffer();    //Reset data buffer
 	_Clear_Command_Buffer(); //Reset commands buffer
@@ -277,7 +277,7 @@ SSD1306Status SSD1306_SetCursor(unsigned short newX, unsigned short newY) {
 //This function is needed to set 1 pixel in the display.
 //
 //!IMPORTANT: This function only load value to buffer.
-//						Draw() function should be called to display loaded pixels!						
+//Draw() function should be called to display loaded pixels!						
 //
 //Function has following arguments:
 //-> "x" is a X coordinate for the pixel. 
@@ -309,7 +309,7 @@ SSD1306Status SSD1306_Draw() {
 	int i = 0;
 	unsigned long lineNumber = 0;
 	unsigned char n_Commands[] = {0xE3, SSD1306_ADDR_PAGE_HV, 0x00, 0xFF,  //Set all SEG elements active in display
-								        SSD1306_ADDR_COL_HV,  0x00, 0x7F}; //Set all COL elements active in display
+					    SSD1306_ADDR_COL_HV,  0x00, 0x7F}; //Set all COL elements active in display
 	
 	CHECK_I2C(SSD1306_Send_Commands(n_Commands, sizeof(n_Commands)));																			
 	
