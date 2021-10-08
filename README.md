@@ -19,7 +19,8 @@ There is 8 usable functions for I2C module
 To activate I2C protocol as master device, *I2C_Init()* function must be called. This function activate third I2C module (I2C3) in the microcontroller
 I2C3 module use Port D for SDA/SCL lines:
 - PD0 = SCL(clock) line of I2C3 module
-- PD1 = SDA(data) line of I2C3 module__
+- PD1 = SDA(data) line of I2C3 module
+
 I2C3 module can use either HS mode (High-speed mode) with 80MHz PLL, that can transsmit 3.33 Mbps or use Fast mode with 16MHz MOSC, that can transsmit 300 kBps.
 To use HS mode, call *I2C_Init()* function with predefined value **I2C_WITH_PLL** or use insteed **I2C_WITHOUT_PLL**
 ### Low level transmission
