@@ -1,6 +1,9 @@
 #ifndef I2C_H
 #define I2C_H
 
+#define I2C_WITH_PLL 1
+#define I2C_WITHOUT_PLL 0
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,7 +30,7 @@ TransmissionStatus I2C_Recive_Byte(unsigned char*       buffer,
 TransmissionStatus I2C_Recive_Bytes(unsigned char*       buffer,
                                     unsigned const char  address);
 
-void I2C_Init(void);
+void I2C_Init(unsigned short status);
 
 #ifdef __cplusplus
 }

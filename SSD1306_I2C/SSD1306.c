@@ -212,12 +212,13 @@ SSD1306Status SSD1306_Send_Commands(unsigned const char* bytes,
 //!IMPORTANT: This function has to be called before using any other function in the file!
 //
 //Function has following arguments:
-//-> None
+//-> "PLLoption" is option to use PLL or not
+//in .h file is made predefined values for this argument
 //
 //Function has following outputs:
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
-SSD1306Status SSD1306_Init() {
+SSD1306Status SSD1306_Init(unsigned short PLLoption) {
 	
 	//Initialisation of basic commands for the SSD1306 display
 	unsigned char n_Commands[]    =  { SSD1306_DISPLAY_OFF,                        //Put display to the sleep mode for initialisation
@@ -240,7 +241,7 @@ SSD1306Status SSD1306_Init() {
 	
 	_Clear_Data_Buffer();    //Reset data buffer
 	_Clear_Command_Buffer(); //Reset commands buffer
-	I2C_Init();              //Activate I2C for the microcontroller
+	I2C_Init(PLLoption);     //Activate I2C for the microcontroller
 	
 	CHECK_I2C(SSD1306_Send_Commands(n_Commands, sizeof(n_Commands)));   //load first round of commands for the SSD1306
 	CHECK_I2C(SSD1306_Send_Commands(n_Commands2, sizeof(n_Commands2))); //load second round of commands for the SSD1306

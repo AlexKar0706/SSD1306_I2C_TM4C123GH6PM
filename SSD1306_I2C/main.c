@@ -8,7 +8,7 @@ void Delay1ms(unsigned long ms) {
 }
 
 int main() {
-	SSD1306_Init();
+	SSD1306_Init(SSD1306_WITH_PLL);
 	SSD1306_SetCursor(3, 4);
 	SSD1306_Write_Str("Hello, world!");
 	while (1) {

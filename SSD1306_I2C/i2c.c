@@ -27,13 +27,16 @@ static unsigned char mLow_transmission = 0;  //Low level transmission state
 //-> PD1 = SDA(data) line of I2C3 module 
 //
 //Function has following arguments:
-//-> None
+//-> "status" is option to use PLL or not
+//in .h file is made predefined values for this argument
 //
 //Function has following outputs:
 //-> None
-void I2C_Init() {volatile unsigned long delay;
-	/* PLL 80MHz initialisation */
-	PLL_Init(4);
+void I2C_Init(unsigned short status) {volatile unsigned long delay;
+	if (status == I2C_WITH_PLL) {
+		/* PLL 80MHz initialisation */
+		PLL_Init(4);
+	}
 	
 	/* Clock initialisation */
 	SYSCTL_RCGCI2C_R   |= SYSCTL_RCGCI2C_R3;
@@ -54,9 +57,18 @@ void I2C_Init() {volatile unsigned long delay;
 	
 	/* I2C Initialisation */
 	I2C3_MCR_R   |= 0x10;
-	I2C3_MTPR_R   = (I2C_MTPR_HS | 0x03); //TPR = (System Clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1;
-										  //TPR = (80 MHz/(2*(2+1)*3330000))-1;
-										  //TPR = 3 + HS stands for High-speed mode (3.33 MHz)
+
+	if (status == I2C_WITH_PLL) {
+		I2C3_MTPR_R   = (I2C_MTPR_HS | 0x03); //TPR = (System Clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1;
+											  //TPR = (80 MHz/(2*(2+1)*3330000))-1;
+											  //TPR = 3 + HS stands for High-speed mode (3.33 MHz)
+	}
+
+	if (status == I2C_WITHOUT_PLL) {
+		I2C3_MTPR_R   = 0x02; 				  //TPR = (System Clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1;
+											  //TPR = (16 MHz/(2*(6+4)*300000))-1;
+											  //TPR = 2 (300kB/s)
+	}
 }
 
 //-------------------------------Low level of transmission------------------------------------//
