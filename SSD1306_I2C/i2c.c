@@ -1,6 +1,6 @@
 #include "i2c.h"
 #include "pll.h"
-#include "tm4c123gh6pm.h"
+#include "../tm4c123gh6pm.h"
 
 //--------------------------------------Private-----------------------------------------//
 
@@ -74,9 +74,9 @@ void I2C_Init(unsigned short status) {volatile unsigned long delay;
 //-------------------------------Low level of transmission------------------------------------//
 //Here is given low level of data transmission, that is not fully handled by the file
 //The algorithm to handle low level transmission is next:
-//1. Start transmission by calling I2C_Start_Transmission(byte, address).
-//2. Transmit as many bytes, as it's needed by calling I2C_Transmit_Byte(byte).
-//3. End transsmion to specifed address by calling I2C_Stop_Transmission().
+//1. Start transmission by calling I2C_StartTransmission(byte, address).
+//2. Transmit as many bytes, as it's needed by calling I2C_TransmitByte(byte).
+//3. End transsmion to specifed address by calling I2C_StopTransmission().
 
 
 //-------------------I2C start transmission------------------------
@@ -95,7 +95,7 @@ void I2C_Init(unsigned short status) {volatile unsigned long delay;
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Start_Transmission(unsigned const char byte,
+TransmissionStatus I2C_StartTransmission(unsigned const char byte,
                                           unsigned const char address) 
 {
 	if (mLow_transmission) return I2CERROR; //Check if low level transsmision is already active
@@ -107,7 +107,8 @@ TransmissionStatus I2C_Start_Transmission(unsigned const char byte,
 	I2C3_MDR_R  = byte;
 	
 	//Polling BUSBSY bit of I2C3 module control register
-	while (I2C3_MCS_R&I2C_MCS_BUSBSY) {};
+	while (I2C3_MCS_R&I2C_MCS_BUSBSY) {
+	};
 	
 	//Start -> Send -> Continue I2C transmission
 	I2C3_MCS_R = ( I2C_MCS_RUN   |
@@ -135,15 +136,53 @@ TransmissionStatus I2C_Start_Transmission(unsigned const char byte,
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Transmit_Byte(unsigned const char byte) {
+TransmissionStatus I2C_TransmitByte(unsigned char byte) {
 	
 	if (!mLow_transmission) return I2CERROR; //Check if low level transsmision is not active
 	
 	//Load data
-	I2C3_MDR_R =  byte;
+	I2C3_MSA_R &= ~0x01;
+	I2C3_MDR_R  =  byte;
 	
 	// Send -> Continue I2C transmission
 	I2C3_MCS_R =  I2C_MCS_RUN;
+	
+	//Wait till microcontroller goes in idle mode
+	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
+
+	if (I2C3_MCS_R&I2C_MCS_ERROR) {
+		if (I2C3_MCS_R&I2C_MCS_ARBLST) I2C3_MCS_R = I2C_MCS_STOP;
+		return I2CERROR;
+	}
+	
+	return I2COK;
+}
+
+//-------------------I2C read byte------------------------
+//This function continue I2C transmission with specifed address
+//
+//!IMPORTANT: This function is a part of low level transmission and
+//            therefore it is forbidden to use both functions of
+//            high level transmission and low level transmission
+//            at the same time!
+//
+//Function has following arguments:
+//-> "buffer" is a buffer, where will be stored 1 byte
+//
+//Function has following outputs:
+//-> "TransmissionStatus" enum value representing status of I2C transmission.
+//Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
+TransmissionStatus I2C_ReciveByte(unsigned char* buffer) {
+	
+	if (!mLow_transmission) return I2CERROR; //Check if low level transsmision is not active
+	
+	// Read -> Continue I2C transmission
+	I2C3_MSA_R |= 0x01;
+	I2C3_MCS_R =  ( I2C_MCS_RUN | 
+					I2C_MCS_ACK );
+	
+	//Store byte
+	*buffer = I2C3_MDR_R&0xFF;
 	
 	//Wait till microcontroller goes in idle mode
 	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
@@ -170,7 +209,7 @@ TransmissionStatus I2C_Transmit_Byte(unsigned const char byte) {
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Stop_Transmission() {
+TransmissionStatus I2C_StopTransmission() {
 	if (!mLow_transmission) return I2CERROR; //Check if low level transsmision is not active
 	
 	mLow_transmission = 0;
@@ -204,13 +243,13 @@ TransmissionStatus I2C_Stop_Transmission() {
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Send_Byte(unsigned const char byte,
+TransmissionStatus I2C_SendByte(unsigned const char byte,
 				 unsigned const char address)  
 {
 	if (mLow_transmission) return I2CERROR; //Check if low level transsmision is already active
 	
 	//Load data and address in appropriate microcontroller registers
-	I2C3_MSA_R  = address;
+	I2C3_MSA_R  = address & (~0x01);
 	I2C3_MDR_R  = byte;
 	
 	//Polling BUSBSY bit of I2C3 module control register
@@ -242,16 +281,16 @@ TransmissionStatus I2C_Send_Byte(unsigned const char byte,
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
-                                  unsigned long        n_Bytes,
+TransmissionStatus I2C_SendBytes(unsigned const char* bytes,
+                                  unsigned long        bufferSize,
 				  unsigned const char  address)	
 {
 	if (mLow_transmission) return I2CERROR; //Check if low level transsmision is already active
 	
-	if (n_Bytes == 1) return I2C_Send_Byte(*bytes, address); //Check if only 1 byte was passed
+	if (bufferSize == 1) return I2C_SendByte(*bytes, address); //Check if only 1 byte was passed
 	
 	//Load data and address in appropriate microcontroller registers
-	I2C3_MSA_R  = address;
+	I2C3_MSA_R  = address & (~0x01);
 	I2C3_MDR_R  = *bytes++;
 	
 	//Polling BUSBSY bit of I2C3 module control register
@@ -261,7 +300,7 @@ TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
 	I2C3_MCS_R =  ( I2C_MCS_RUN   |
 			I2C_MCS_START );
 
-	while (n_Bytes--) {
+	while (bufferSize--) {
 		//Wait till microcontroller goes in idle mode
 		while (I2C3_MCS_R&I2C_MCS_BUSY) {};
 			
@@ -274,13 +313,13 @@ TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
 		I2C3_MDR_R  = *bytes++;
 		
 		//Check if it is the last byte of data
-		if (n_Bytes == 1) break;
+		if (bufferSize == 1) break;
 		
 		//Send -> Continue I2C transmission
 		I2C3_MCS_R =  I2C_MCS_RUN;
 	}
 	
-	////Send -> Stop I2C transmission
+	//Send -> Stop I2C transmission
 	I2C3_MCS_R =  ( I2C_MCS_RUN  |
 	                I2C_MCS_STOP );
 	
@@ -292,84 +331,116 @@ TransmissionStatus I2C_Send_Bytes(unsigned const char* bytes,
 	return I2COK;
 }
 
-//-------------------I2C send bytes------------------------
+//-------------------I2C read bytes------------------------
 //This function recive 1 byte via I2C transmission with specifed address
 //
-//!WARNING: Current function is not yet tested!
 //
 //Function has following arguments:
 //-> "buffer" is the data buffer into which the data will be loaded
+//-> "command" is the buffer with command for slave device
+//-> "commandSize" is the size of command buffer
 //-> "address" is an address of specific master/slave device
 //
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Recive_Byte(unsigned char*      buffer,
-				   unsigned const char address)  
+TransmissionStatus I2C_ReadByte(unsigned char*      buffer,
+								unsigned char*	   command,
+								unsigned long	   commandSize,
+				unsigned const char address)  
 {
-	I2C3_MSA_R  = address;
+	//Send command to slave device
+	I2C_StartTransmission(*command, address);
+	while(--commandSize)
+		I2C_TransmitByte(*(++command));
+	mLow_transmission = 0;
 	
-	while (I2C3_MCS_R&I2C_MCS_BUSBSY) {};
-		
+	//Start I2C read for master device
+	I2C3_MSA_R  =  address | 0x01;
+	//Start -> Read -> Stop I2C transmission
 	I2C3_MCS_R  =  ( I2C_MCS_RUN   |
-			 I2C_MCS_START |
-			 I2C_MCS_STOP  |
-			 I2C_MCS_ACK   );
+					 I2C_MCS_START |
+			 I2C_MCS_STOP);
 	
-	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
+	//Wait till microcontroller goes in idle mode
+	while (I2C3_MCS_R&I2C_MCS_BUSY) {
+	};
 	
+	//Check for Errors
 	if (I2C3_MCS_R&I2C_MCS_ERROR) return I2CERROR;
 		
+	//Store data in buffer
 	*buffer = I2C3_MDR_R&0xFF;
 		
 	return I2COK;
 }
 
-//-------------------I2C recive bytes------------------------
-//This function recive bytes via I2C transmission with specifed address
+//-------------------I2C read bytes------------------------
+//This function read bytes via I2C transmission with specifed address
 //
-//!WARNING: Current function is not yet tested!
 //
 //Function has following arguments:
 //-> "buffer" is the data buffer into which the data will be loaded
+//-> "bufferSize"
+//-> "command" is the buffer with command for slave device
+//-> "commandSize" is the size of command buffer
 //-> "address" is an address of specific master/slave device
 //
 //Function has following outputs:
 //-> "TransmissionStatus" enum value representing status of I2C transmission.
 //Returns 0 (I2COK) if all is OK or returns (I2CERROR) error number
-TransmissionStatus I2C_Recive_Bytes(unsigned char*       buffer,
+TransmissionStatus I2C_ReadBytes(unsigned char*       buffer,
+								 unsigned long		 bufferSize,
+								 unsigned char*		 command,
+								 unsigned long		 commandSize,
 				    unsigned const char  address)	
-{	
-	I2C3_MSA_R  = address;
-		
-	while (I2C3_MCS_R&I2C_MCS_BUSBSY) {};
+{int i;
+	//Send command to slave device
+	I2C_StartTransmission(*command, address);
+	while(--commandSize)
+		I2C_TransmitByte(*(++command));
+	mLow_transmission = 0;
 	
-	I2C3_MCS_R =   ( I2C_MCS_RUN   |
-		         I2C_MCS_ACK   |
-			 I2C_MCS_START );
-
-	while (*(++buffer)) {
-		while (I2C3_MCS_R&I2C_MCS_BUSY) {};
+	//Start I2C read for master device
+	I2C3_MSA_R  =  address | 0x01;
+	//Start -> Read -> Continue I2C transmission
+	I2C3_MCS_R  =  ( I2C_MCS_RUN   |
+					 I2C_MCS_START |
+			 I2C_MCS_ACK   );
+	for (i = 0; i < bufferSize; i++) {
+		
+		//Wait till microcontroller goes in idle mode
+		while (I2C3_MCS_R&I2C_MCS_BUSY) {
+		};
 			
+		
 		if (I2C3_MCS_R&I2C_MCS_ERROR) {
 			if (I2C3_MCS_R&I2C_MCS_ARBLST) I2C3_MCS_R = I2C_MCS_STOP;
 			return I2CERROR;
 		}
 		
-		*buffer = I2C3_MDR_R&0xFF;
+		//Store data in buffer
+		buffer[i] = I2C3_MDR_R&0xFF;
 		
-		if (!(*(buffer+1))) break;
+		//Check if it is the last byte of data
+		if (i+2 >= bufferSize) break;
 		
+		//Read -> Continue I2C transmission
 		I2C3_MCS_R  =  ( I2C_MCS_RUN   |
 				 I2C_MCS_ACK   );
 	}
 	
+	//Read -> Stop I2C transmission
 	I2C3_MCS_R =  ( I2C_MCS_RUN  |
 	                I2C_MCS_STOP );
 	
+	//Wait till microcontroller goes in idle mode
 	while (I2C3_MCS_R&I2C_MCS_BUSY) {};
 		
 	if (I2C3_MCS_R&I2C_MCS_ERROR) return I2CERROR;
+		
+	//Store last byte in buffer
+	buffer[i+1] = I2C3_MDR_R&0xFF;
 	
 	return I2COK;
 }

@@ -1,6 +1,6 @@
 #include "SSD1306.h"
-#include "tm4c123gh6pm.h"
 #include "i2c.h"
+#include "../tm4c123gh6pm.h"
 
 //--------------------------------------Private-----------------------------------------//
 
@@ -189,7 +189,7 @@ static void _Delay1ms(unsigned long ms) {
 //Function has following outputs:
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
-SSD1306Status SSD1306_Send_Commands(unsigned const char* bytes, 
+SSD1306Status SSD1306_SendCommands(unsigned const char* bytes, 
 				    unsigned long        n_Bytes)
 {unsigned long i;
 	
@@ -200,7 +200,7 @@ SSD1306Status SSD1306_Send_Commands(unsigned const char* bytes,
 	for (i = 1; i < n_Bytes + 1; i++)
 		mCommand_buffer[i] = bytes[i-1];
 		
-	CHECK_I2C(I2C_Send_Bytes(mCommand_buffer, n_Bytes + 1, SSD1306_ADDRESS));
+	CHECK_I2C(I2C_SendBytes(mCommand_buffer, n_Bytes + 1, SSD1306_ADDRESS));
 	
 	return SSD1306_OK;
 }
@@ -211,14 +211,11 @@ SSD1306Status SSD1306_Send_Commands(unsigned const char* bytes,
 //
 //!IMPORTANT: This function has to be called before using any other function in the file!
 //
-//Function has following arguments:
-//-> "PLLoption" is option to use PLL or not
-//in .h file is made predefined values for this argument
 //
 //Function has following outputs:
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
-SSD1306Status SSD1306_Init(unsigned short PLLoption) {
+SSD1306Status SSD1306_Init() {
 	
 	//Initialisation of basic commands for the SSD1306 display
 	unsigned char n_Commands[]    =  { SSD1306_DISPLAY_OFF,                        //Put display to the sleep mode for initialisation
@@ -241,10 +238,9 @@ SSD1306Status SSD1306_Init(unsigned short PLLoption) {
 	
 	_Clear_Data_Buffer();    //Reset data buffer
 	_Clear_Command_Buffer(); //Reset commands buffer
-	I2C_Init(PLLoption);     //Activate I2C for the microcontroller
 	
-	CHECK_I2C(SSD1306_Send_Commands(n_Commands, sizeof(n_Commands)));   //load first round of commands for the SSD1306
-	CHECK_I2C(SSD1306_Send_Commands(n_Commands2, sizeof(n_Commands2))); //load second round of commands for the SSD1306
+	CHECK_I2C(SSD1306_SendCommands(n_Commands, sizeof(n_Commands)));   //load first round of commands for the SSD1306
+	CHECK_I2C(SSD1306_SendCommands(n_Commands2, sizeof(n_Commands2))); //load second round of commands for the SSD1306
 																		 
 	_Delay1ms(100);  //Wait 100ms for stabilization
 	return SSD1306_Draw();  //Clear previous data of the display buffer
@@ -311,16 +307,16 @@ SSD1306Status SSD1306_Draw() {
 	unsigned char n_Commands[] = {0xE3, SSD1306_ADDR_PAGE_HV, 0x00, 0xFF,  //Set all SEG elements active in display
 					    SSD1306_ADDR_COL_HV,  0x00, 0x7F}; //Set all COL elements active in display
 	
-	CHECK_I2C(SSD1306_Send_Commands(n_Commands, sizeof(n_Commands)));																			
+	CHECK_I2C(SSD1306_SendCommands(n_Commands, sizeof(n_Commands)));																			
 	
 	//Start data buffer transmission, transmit 1 line (128 bytes), then stop and prepare to transmit next line																		 
 	while (lineNumber < MAXLINES) {
-		CHECK_I2C(I2C_Start_Transmission(SSD1306_DISPLAY_START_LINE, SSD1306_ADDRESS));
+		CHECK_I2C(I2C_StartTransmission(SSD1306_DISPLAY_START_LINE, SSD1306_ADDRESS));
 		
 		for (i = WIDTH*lineNumber; i < WIDTH + (WIDTH*lineNumber); i++)
-			CHECK_I2C(I2C_Transmit_Byte(mData_buffer[i]));
+			CHECK_I2C(I2C_TransmitByte(mData_buffer[i]));
 		
-		CHECK_I2C(I2C_Stop_Transmission());
+		CHECK_I2C(I2C_StopTransmission());
 		lineNumber++;
 	}
 
@@ -336,7 +332,7 @@ SSD1306Status SSD1306_Draw() {
 //Function has following outputs:
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
-SSD1306Status SSD1306_Clear_Display(void) {
+SSD1306Status SSD1306_ClearDisplay(void) {
 	_Clear_Data_Buffer();
 	return SSD1306_Draw();
 }
@@ -355,7 +351,7 @@ SSD1306Status SSD1306_Clear_Display(void) {
 //Function has following outputs:
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
-SSD1306Status SSD1306_Write_Char(const char ch) {int i;
+SSD1306Status SSD1306_WriteChar(const char ch) {int i;
 	
 	unsigned long dataIndex = mCursor_X + WIDTH * mCursor_Y;
 	
@@ -402,9 +398,9 @@ SSD1306Status SSD1306_Write_Char(const char ch) {int i;
 //Function has following outputs:
 //-> "SSD1306Status" enum value representing status of function.
 //Returns 0 (SSD1306_OK) if all is OK or returns error number 
-SSD1306Status SSD1306_Write_Str(const char* str) {
+SSD1306Status SSD1306_WriteStr(const char* str) {
 	while(*str) {
-		CHECK_DATA(SSD1306_Write_Char(*str));
+		CHECK_DATA(SSD1306_WriteChar(*str));
 		str++;
 	}
 	return SSD1306_Draw();

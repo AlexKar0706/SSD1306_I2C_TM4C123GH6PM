@@ -65,9 +65,6 @@
 // 6. Charge Pump Command Table 
 #define SSD1306_CHARGE_PUMP_REGULATOR 0x8D
 
-#define SSD1306_WITH_PLL 1
-#define SSD1306_WITHOUT_PLL 0
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -75,14 +72,14 @@ extern "C" {
 typedef enum SSD1306_Err_Status {
 SSD1306_OK, SSD1306_I2C_ERR, SSD1306_WRONG_DATA} SSD1306Status;
 	
-SSD1306Status SSD1306_Send_Commands(unsigned const char* buffer, unsigned long n_Bytes);
-SSD1306Status SSD1306_Init(unsigned short PLLoption);
+SSD1306Status SSD1306_SendCommands(unsigned const char* buffer, unsigned long n_Bytes);
+SSD1306Status SSD1306_Init(void);
 SSD1306Status SSD1306_SetCursor(unsigned short newX, unsigned short newY);
 SSD1306Status SSD1306_SetPixel(unsigned short x, unsigned short y);
 SSD1306Status SSD1306_Draw(void);
-SSD1306Status SSD1306_Write_Char(const char ch);
-SSD1306Status SSD1306_Write_Str(const char* str);
-SSD1306Status SSD1306_Clear_Display(void);
+SSD1306Status SSD1306_WriteChar(const char ch);
+SSD1306Status SSD1306_WriteStr(const char* str);
+SSD1306Status SSD1306_ClearDisplay(void);
 
 #ifdef __cplusplus
 }
